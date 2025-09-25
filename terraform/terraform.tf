@@ -10,7 +10,7 @@ terraform {
 
   # We use S3 and DynamoDB as state storage (backend) so terraform can be ran in CI servers.
   backend "s3" {
-    bucket         = "microtodo-tf-state" # Depends on the output from terraform-bootstrap
+    bucket         = "microtodo-tf-state-8f4e97" # Depends on the output from terraform-bootstrap
     key            = "microtodo/terraform.tfstate"
     region         = "eu-west-2"
     dynamodb_table = "microtodo-tf-state-lock" # Depends on the output from terraform-bootstrap
