@@ -57,9 +57,9 @@ resource "aws_eks_node_group" "microtodo_eks_node_group" {
 data "aws_caller_identity" "current" {}
 
 resource "aws_eks_access_entry" "admin_access" {
-  cluster_name = aws_eks_cluster.microtodo_eks_cluster.name
-  principal_arn     = data.aws_caller_identity.current.arn
-  type              = "STANDARD"
+  cluster_name  = aws_eks_cluster.microtodo_eks_cluster.name
+  principal_arn = data.aws_caller_identity.current.arn
+  type          = "STANDARD"
 }
 
 resource "aws_eks_access_policy_association" "admin_access_policy" {
@@ -79,8 +79,8 @@ resource "aws_eks_access_policy_association" "admin_access_policy" {
 resource "aws_eks_access_entry" "root_admin_access" {
   cluster_name = aws_eks_cluster.microtodo_eks_cluster.name
   # You should probably use a more specific IAM user instead of root, but for the purposes of this example, we'll use root.
-  principal_arn     = "arn:aws:iam::${var.aws_account_id}:root"
-  type              = "STANDARD"
+  principal_arn = "arn:aws:iam::${var.aws_account_id}:root"
+  type          = "STANDARD"
 }
 
 resource "aws_eks_access_policy_association" "root_admin_access_policy" {
