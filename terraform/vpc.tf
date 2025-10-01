@@ -19,6 +19,8 @@ resource "aws_subnet" "microtodo_public_subnets" {
 
   tags = {
     Name = each.value.name
+    "kubernetes.io/cluster/microtodo_eks_cluster" = "shared"
+    "kubernetes.io/role/elb"                       = "1"
   }
 }
 
@@ -31,6 +33,8 @@ resource "aws_subnet" "microtodo_private_subnets" {
 
   tags = {
     Name = each.value.name
+    "kubernetes.io/cluster/microtodo_eks_cluster"     = "shared"
+    "kubernetes.io/role/internal-elb"                 = "1"
   }
 }
 #<-- END Subnets -->

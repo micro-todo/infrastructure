@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway-config
+  namespace: microtodo
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  # Service discovery - these are the internal service addresses
+  USER_SERVICE_HOST: "users-service"
+  USER_SERVICE_PORT: "3000"
+  TASKS_SERVICE_HOST: "tasks-service"
+  TASKS_SERVICE_PORT: "3000"

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notifications-service-config
+  namespace: microtodo
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  DATABASE_HOST: "postgres-notifications-service"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "notifications_db"
+  RABBITMQ_HOST: "rabbitmq-service"
+  RABBITMQ_PORT: "5672"
+  RMQ_QUEUE: "notifications"

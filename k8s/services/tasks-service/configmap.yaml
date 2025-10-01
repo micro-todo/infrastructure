@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tasks-service-config
+  namespace: microtodo
+data:
+  NODE_ENV: "production"
+  TCP_HOST: "0.0.0.0"
+  TCP_PORT: "3000"
+  DATABASE_HOST: "postgres-tasks-service"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "tasks_db"
+  RABBITMQ_HOST: "rabbitmq-service"
+  RABBITMQ_PORT: "5672"
+  RMQ_QUEUE: "tasks"

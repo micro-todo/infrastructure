@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: notifications-service
+  namespace: microtodo
+spec:
+  selector:
+    app: notifications-service
+  ports:
+  - port: 3000
+    targetPort: 3000

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: users-service-config
+  namespace: microtodo
+data:
+  NODE_ENV: "production"
+  TCP_HOST: "0.0.0.0"
+  TCP_PORT: "3000"
+  DATABASE_HOST: "postgres-users-service"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "users_db"
+  RABBITMQ_HOST: "rabbitmq-service"
+  RABBITMQ_PORT: "5672"
+  RMQ_NOTIFICATIONS_QUEUE: "notifications"
+  RMQ_TASKS_QUEUE: "tasks"
