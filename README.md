@@ -1,145 +1,80 @@
 # MicroTodo Infrastructure
 
-This repository contains the Infrastructure as Code (IaC) and Kubernetes configurations for the MicroTodo application, built using Terraform and AWS services.
+Minimal, task-focused guide for provisioning AWS infra (Terraform) and deploying Kubernetes workloads for MicroTodo.
 
-## 🏗️ Architecture Overview
+## What’s here
+- Terraform: EKS, VPC, IAM, ALB controller, EBS CSI, ECR repos
+- Kubernetes: namespaces, Postgres + RabbitMQ, External Secrets, services, ingress
 
-The infrastructure consists of:
+## Prerequisites
+- Terraform >= 1.13, AWS CLI, kubectl
+- AWS credentials with permissions for EKS/VPC/IAM/ELB/ECR/Secrets Manager
 
-- **AWS EKS Cluster** - Managed Kubernetes service for container orchestration
-- **VPC with Multi-AZ Setup** - Secure network isolation across 3 availability zones
-- **IAM Roles & Policies** - Secure access management for EKS cluster and worker nodes
-- **Remote State Management** - S3 backend with DynamoDB locking for state consistency
-
-## 📁 Repository Structure
-
-```
-infrastructure/
-├── terraform-bootstrap/     # Bootstrap resources for Terraform state management
-│   └── main.tf             # S3 bucket and DynamoDB table for remote state
-├── terraform/              # Main infrastructure resources
-│   ├── main.tf             # Provider configuration
-│   ├── terraform.tf        # Terraform configuration and S3 backend
-│   ├── locals.tf           # Local variables and subnet definitions
-│   ├── vpc.tf              # VPC, subnets, gateways, and routing
-│   ├── iam.tf              # IAM roles and policies for EKS
-│   └── eks.tf              # EKS cluster and node group configuration
-└── README.md               # This file
-```
-
-## 🌐 Infrastructure Components
-
-### VPC Network Architecture
-- **CIDR Block**: `10.0.0.0/16`
-- **Public Subnets**: 3 subnets across AZs (eu-west-2a, eu-west-2b, eu-west-2c)
-  - `10.0.0.0/22`, `10.0.4.0/22`, `10.0.8.0/22`
-- **Private Subnets**: 3 subnets across AZs
-  - `10.0.12.0/22`, `10.0.16.0/22`, `10.0.20.0/22`
-- **Internet Gateway**: For public subnet internet access
-- **NAT Gateway**: Single NAT gateway for private subnet outbound traffic
-- **Route Tables**: Separate routing for public and private subnets
-
-### EKS Cluster Configuration
-- **Cluster Version**: 1.31
-- **Node Group**: 
-  - Instance Type: `t3.small`
-  - Scaling: Min 1, Desired 2, Max 3 nodes
-  - Deployment: Private subnets only
-- **Logging**: Enabled for API, audit, authenticator, controller manager, and scheduler
-- **Access**: Public endpoint enabled (development setup)
-
-### IAM Security
-- **EKS Cluster Role**: Service role for EKS cluster management
-- **Node Group Role**: EC2 service role with required policies:
-  - AmazonEKSWorkerNodePolicy
-  - AmazonEKS_CNI_Policy
-  - AmazonEC2ContainerRegistryReadOnly
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- [Terraform](https://www.terraform.io/downloads.html) >= 1.13
-- [AWS CLI](https://aws.amazon.com/cli/) configured with appropriate credentials
-- AWS account with necessary permissions for EKS, VPC, IAM, S3, and DynamoDB
-
-### Initial Setup
-
-1. **Bootstrap Terraform State Management**
-   ```bash
-   cd terraform-bootstrap
-   terraform init
-   terraform plan
-   terraform apply
-   ```
-   
-   This creates:
-   - S3 bucket for state storage (with versioning and encryption)
-   - DynamoDB table for state locking
-
-2. **Update Backend Configuration**
-   
-   After the bootstrap step, note the S3 bucket name from the output and update the backend configuration in `terraform/terraform.tf` if needed.
-
-3. **Deploy Main Infrastructure**
-   ```bash
-   cd ../terraform
-   terraform init
-   terraform plan
-   terraform apply
-   ```
-
-### Deployment Commands
-
+## Quick start
+1) Provision AWS infra
 ```bash
-# Initialize Terraform
+cd terraform
 terraform init
-
-# Plan the deployment
-terraform plan
-
-# Apply the configuration
 terraform apply
-
-# View current state
-terraform show
-
-# Destroy infrastructure (when needed)
-terraform destroy
 ```
 
-## 🔧 Configuration
+2) Configure kubectl
+```bash
+aws eks update-kubeconfig --name microtodo_eks_cluster --region eu-west-2
+```
 
-### Region and Availability Zones
-- **Primary Region**: `eu-west-2` (London)
-- **Availability Zones**: a, b, c (for high availability)
+3) Deploy Kubernetes
+```bash
+kubectl apply -f k8s/namespaces
+kubectl apply -R -f k8s/
+```
 
-### Customization Options
+## Images and ECR
+- Terraform creates ECR repos for: api-gateway, users-service, tasks-service, notifications-service
+- Outputs: `ecr_registry_url`, `ecr_repository_urls`
+- Push your images to those repos and use the tags in Deployments
 
-You can customize the deployment by modifying variables in `locals.tf`:
+## Secrets (External Secrets)
+- `ClusterSecretStore` reads from AWS Secrets Manager via IRSA
+- `ExternalSecret` writes to `microtodo-secrets` (DB/RabbitMQ/JWT secrets)
 
-- **Subnet CIDR blocks**: Adjust the IP ranges for your network requirements
-- **Instance types**: Change node group instance types in `eks.tf`
-- **Scaling configuration**: Modify min/max/desired node counts
-- **EKS version**: Update the Kubernetes version as needed
+## Databases & Storage
+- Postgres and RabbitMQ run as StatefulSets on EBS (EBS CSI addon via Terraform)
+- Default StorageClass: gp3 (see `k8s/storage/gp3-storageclass.yaml`)
 
-## 🔒 Security Considerations
+## Migrations (Prisma)
+- Each service has a `migrate.yaml` Job that runs `npx prisma migrate deploy`
+- `DATABASE_URL` is constructed at runtime from env
+```bash
+kubectl apply -f k8s/services/users-service/migrate.yaml
+kubectl apply -f k8s/services/tasks-service/migrate.yaml
+kubectl apply -f k8s/services/notifications-service/migrate.yaml
+kubectl -n microtodo wait --for=condition=complete job/users-service-migrate job/tasks-service-migrate job/notifications-service-migrate --timeout=5m
+```
 
-### Current Setup (Example/Showcase)
-- EKS endpoint has public access enabled
-- Default security groups are used
-- Single NAT gateway for cost optimization
+## Health checks (TCP exec probes)
+- Services are TCP (NestJS). Probes send a payload to localhost:
+  - Payload: `39#{"pattern":"health","data":[],"id":"1"}`
+  - Probes use Node’s `net` module; port comes from `PROBE_PORT` or `TCP_PORT/PORT`
+  - `startupProbe` (lenient), `readinessProbe` (moderate), `livenessProbe` (resilient)
 
-### Production Recommendations
-- Implement custom security groups with minimal required permissions
-- Use private EKS endpoint with bastion host or VPN access
-- Deploy NAT gateways in each AZ for high availability
-- Enable VPC Flow Logs for network monitoring
-- Implement network ACLs for additional security layers
-- Use AWS Systems Manager Session Manager instead of SSH
+## Ingress / ALB
+- Ingress uses `ingressClassName: alb`
+- Get hostname:
+```bash
+kubectl -n microtodo get ingress api-gateway-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}'
+```
+- For HTTPS, set certificate ARN and SSL redirect annotations
 
-## 🔄 State Management
+## Common gotchas (fast fixes)
+- PVC Pending: ensure EBS CSI addon is running; gp3 StorageClass applied
+- Postgres CrashLoop (lost+found): PGDATA set to subdirectory; initContainer chowns volume
+- Prisma fails: ensure `DATABASE_URL` expands (or is exported in command) and DB reachable
+- ALB hostname empty: verify subnet tags and ALB controller IAM policy
+- RabbitMQ auth: ensure secret creds match; delete RabbitMQ PVC to re-seed if needed
 
-This infrastructure uses Terraform remote state with:
-- **S3 Backend**: Encrypted state storage with versioning
-- **DynamoDB Locking**: Prevents concurrent state modifications
+## Cleanup
+```bash
+kubectl delete namespace microtodo --grace-period=0 --force --ignore-not-found
+terraform -chdir=terraform destroy -auto-approve
+```
