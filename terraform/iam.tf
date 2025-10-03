@@ -243,7 +243,6 @@ resource "aws_iam_policy" "github_actions_ecr_policy" {
         Effect = "Allow"
         Action = [
           "ecr:CompleteLayerUpload",
-          "ecr:GetAuthorizationToken",
           "ecr:UploadLayerPart",
           "ecr:InitiateLayerUpload",
           "ecr:BatchCheckLayerAvailability",
@@ -252,7 +251,7 @@ resource "aws_iam_policy" "github_actions_ecr_policy" {
           "ecr:BatchGetImage",
           "ecr:ListImages"
         ]
-        Resource = "arn:aws:ecr:${local.region}:${data.aws_caller_identity.current.account_id}:microtodo/*"
+        Resource = "arn:aws:ecr:${local.region}:${data.aws_caller_identity.current.account_id}:repository/microtodo/*"
       }
     ]
   })
