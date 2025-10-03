@@ -7,7 +7,7 @@ spec:
   project: default
   
   source:
-    repoURL: https://github.com/microtodo/infrastructure
+    repoURL: https://github.com/micro-todo/infrastructure
     targetRevision: master
     path: k8s
   

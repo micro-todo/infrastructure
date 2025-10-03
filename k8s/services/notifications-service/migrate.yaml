@@ -46,8 +46,6 @@ spec:
           - |
             npx prisma migrate deploy
         env:
-        - name: DATABASE_URL
-          value: "postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@$(DATABASE_HOST):$(DATABASE_PORT)/$(DATABASE_NAME)"
         - name: DATABASE_USERNAME
           valueFrom:
             secretKeyRef:

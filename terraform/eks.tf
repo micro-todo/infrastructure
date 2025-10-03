@@ -100,5 +100,8 @@ resource "aws_eks_addon" "microtodo_ebs_csi_driver" {
   addon_name               = "aws-ebs-csi-driver"
   service_account_role_arn = aws_iam_role.microtodo_ebs_csi_driver.arn
 
-  depends_on = [aws_iam_role_policy_attachment.microtodo_ebs_csi_driver_policy]
+  depends_on = [
+    aws_iam_role_policy_attachment.microtodo_ebs_csi_driver_policy,
+    aws_eks_node_group.microtodo_eks_node_group
+  ]
 }
