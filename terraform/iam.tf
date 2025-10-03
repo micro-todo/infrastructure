@@ -157,3 +157,35 @@ resource "aws_iam_role_policy" "aws_load_balancer_controller_policy" {
   # This file should be downloaded using scripts/download-alb-policy.sh
   policy = file("${path.module}/iam-policies/aws-load-balancer-controller-policy.json")
 }
+
+resource "aws_iam_role" "microtodo_ebs_csi_driver" {
+  name = "microtodo_ebs_csi_driver_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.eks_oidc.arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "${replace(aws_iam_openid_connect_provider.eks_oidc.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa",
+            "${replace(aws_iam_openid_connect_provider.eks_oidc.url, "https://", "")}:aud" = "sts.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name = "microtodo_ebs_csi_driver_role"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "microtodo_ebs_csi_driver_policy" {
+  role       = aws_iam_role.microtodo_ebs_csi_driver.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+}

@@ -14,3 +14,4 @@ data:
   RABBITMQ_PORT: "5672"
   RMQ_NOTIFICATIONS_QUEUE: "notifications"
   RMQ_TASKS_QUEUE: "tasks"
+  HEALTH_PAYLOAD: "39#{\"pattern\":\"health\",\"data\":[],\"id\":\"1\"}"

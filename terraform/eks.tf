@@ -42,9 +42,9 @@ resource "aws_eks_node_group" "microtodo_eks_node_group" {
     aws_subnet.microtodo_private_subnets["c"].id
   ]
   scaling_config {
-    desired_size = 2
-    max_size     = 3
-    min_size     = 1
+    desired_size = 4
+    max_size     = 5
+    min_size     = 2
   }
 
   instance_types = ["t3.small"]
@@ -93,4 +93,12 @@ resource "aws_eks_access_policy_association" "root_admin_access_policy" {
   }
 
   depends_on = [aws_eks_access_entry.root_admin_access]
+}
+
+resource "aws_eks_addon" "microtodo_ebs_csi_driver" {
+  cluster_name             = aws_eks_cluster.microtodo_eks_cluster.name
+  addon_name               = "aws-ebs-csi-driver"
+  service_account_role_arn = aws_iam_role.microtodo_ebs_csi_driver.arn
+
+  depends_on = [aws_iam_role_policy_attachment.microtodo_ebs_csi_driver_policy]
 }

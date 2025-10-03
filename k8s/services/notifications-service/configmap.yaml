@@ -5,10 +5,12 @@ metadata:
   namespace: microtodo
 data:
   NODE_ENV: "production"
-  PORT: "3000"
+  TCP_HOST: "0.0.0.0"
+  TCP_PORT: "3000"
   DATABASE_HOST: "postgres-notifications-service"
   DATABASE_PORT: "5432"
   DATABASE_NAME: "notifications_db"
   RABBITMQ_HOST: "rabbitmq-service"
   RABBITMQ_PORT: "5672"
   RMQ_QUEUE: "notifications"
+  HEALTH_PAYLOAD: "39#{\"pattern\":\"health\",\"data\":[],\"id\":\"1\"}"

@@ -13,3 +13,4 @@ data:
   RABBITMQ_HOST: "rabbitmq-service"
   RABBITMQ_PORT: "5672"
   RMQ_QUEUE: "tasks"
+  HEALTH_PAYLOAD: "39#{\"pattern\":\"health\",\"data\":[],\"id\":\"1\"}"
