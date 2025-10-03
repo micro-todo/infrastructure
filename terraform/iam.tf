@@ -215,7 +215,9 @@ resource "aws_iam_role" "github_actions" {
         Condition = {
           StringEquals = {
             "${replace(aws_iam_openid_connect_provider.github_actions.url, "https://", "")}:aud" = "sts.amazonaws.com"
-            "${replace(aws_iam_openid_connect_provider.github_actions.url, "https://", "")}:sub" = "repo:micro-todo/*:ref:refs/heads/master"
+          }
+          StringLike = {
+            "${replace(aws_iam_openid_connect_provider.github_actions.url, "https://", "")}:sub" = "repo:micro-todo/*"
           }
         }
       }
@@ -223,9 +225,46 @@ resource "aws_iam_role" "github_actions" {
   })
 }
 
+resource "aws_iam_policy" "github_actions_ecr_policy" {
+  name        = "github_actions_ecr_policy"
+  description = "Policy for GitHub Actions to push to ECR repositories"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:CompleteLayerUpload",
+          "ecr:GetAuthorizationToken",
+          "ecr:UploadLayerPart",
+          "ecr:InitiateLayerUpload",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:PutImage",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:ListImages"
+        ]
+        Resource = "arn:aws:ecr:${local.region}:${data.aws_caller_identity.current.account_id}:microtodo/*"
+      }
+    ]
+  })
+
+  tags = {
+    Name = "github_actions_ecr_policy"
+  }
+}
+
 resource "aws_iam_role_policy_attachment" "github_actions_policy" {
   role       = aws_iam_role.github_actions.name
-  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+  policy_arn = aws_iam_policy.github_actions_ecr_policy.arn
 }
 
 output "github_actions_role_arn" {

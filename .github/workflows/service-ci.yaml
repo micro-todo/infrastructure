@@ -12,9 +12,6 @@ on:
         required: false
         type: string
         default: Dockerfile
-      registry:
-        required: true
-        type: string
       repository:
         required: true
         type: string
@@ -53,7 +50,7 @@ jobs:
           context: ${{ inputs.docker_context }}
           file: ${{ inputs.docker_context }}/${{ inputs.dockerfile }}
           push: true
-          tags: ${inputs.registry}/${inputs.repository}:${inputs.image_tag}
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.repository }}:${{ inputs.image_tag }}
           provenance: false
 
       - name: Checkout infra repo
@@ -66,13 +63,13 @@ jobs:
       - name: Update deployment.yaml
         uses: mikefarah/yq@master
         with:
-          cmd: yq -i ".spec.template.spec.containers[0].image = \"${inputs.registry}/${inputs.repository}:${inputs.image_tag}\"" infrastructure/k8s/services/${{ inputs.service_name }}/deployment.yaml
+          cmd: yq -i ".spec.template.spec.containers[0].image = \"${{ steps.login-ecr.outputs.registry }}/${{ inputs.repository }}:${{ inputs.image_tag }}\"" infrastructure/k8s/services/${{ inputs.service_name }}/deployment.yaml
 
       - name: Update migrate.yaml
         if: ${{ inputs.service_name != 'api-gateway' }}
         uses: mikefarah/yq@master
         with:
-          cmd: yq -i ".spec.template.spec.containers[0].image = \"${inputs.registry}/${inputs.repository}:${inputs.image_tag}\"" infrastructure/k8s/services/${{ inputs.service_name }}/migrate.yaml
+          cmd: yq -i ".spec.template.spec.containers[0].image = \"${{ steps.login-ecr.outputs.registry }}/${{ inputs.repository }}:${{ inputs.image_tag }}\"" infrastructure/k8s/services/${{ inputs.service_name }}/migrate.yaml
 
       - name: Create PR to infra
         uses: peter-evans/create-pull-request@v6
