@@ -1,0 +1,87 @@
+name: service-ci
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+      docker_context:
+        required: true
+        type: string
+      dockerfile:
+        required: false
+        type: string
+        default: Dockerfile
+      registry:
+        required: true
+        type: string
+      repository:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+    secrets:
+      PAT_TOKEN:
+        required: true
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # ARN of the role from /terraform/iam.tf:231
+          role-to-assume: "arn:aws:iam::768881856011:role/github_actions_role"
+          aws-region: eu-west-2
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.docker_context }}
+          file: ${{ inputs.docker_context }}/${{ inputs.dockerfile }}
+          push: true
+          tags: ${inputs.registry}/${inputs.repository}:${inputs.image_tag}
+          provenance: false
+
+      - name: Checkout infra repo
+        uses: actions/checkout@v4
+        with:
+          repository: micro-todo/infrastructure
+          path: infrastructure
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Update deployment.yaml
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq -i ".spec.template.spec.containers[0].image = \"${inputs.registry}/${inputs.repository}:${inputs.image_tag}\"" infrastructure/k8s/services/${{ inputs.service_name }}/deployment.yaml
+
+      - name: Update migrate.yaml
+        if: ${{ inputs.service_name != 'api-gateway' }}
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq -i ".spec.template.spec.containers[0].image = \"${inputs.registry}/${inputs.repository}:${inputs.image_tag}\"" infrastructure/k8s/services/${{ inputs.service_name }}/migrate.yaml
+
+      - name: Create PR to infra
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          path: infrastructure
+          branch: chore/${{ inputs.service_name }}-${{ github.sha }}
+          commit-message: "chore(${ { inputs.service_name }}): bump image to ${{ github.sha }}"
+          title: "chore(${ { inputs.service_name }}): bump image to ${{ github.sha }}"
+          body: "Automated bump from ${{ github.repository }}@${{ github.sha }}"
+          signoff: true
+          delete-branch: true
