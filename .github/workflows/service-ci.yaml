@@ -77,8 +77,8 @@ jobs:
           token: ${{ secrets.PAT_TOKEN }}
           path: infrastructure
           branch: chore/${{ inputs.service_name }}-${{ github.sha }}
-          commit-message: "chore(${ { inputs.service_name }}): bump image to ${{ github.sha }}"
-          title: "chore(${ { inputs.service_name }}): bump image to ${{ github.sha }}"
+          commit-message: "chore(${{ inputs.service_name }}): bump image to ${{ github.sha }}"
+          title: "chore(${{ inputs.service_name }}): bump image to ${{ github.sha }}"
           body: "Automated bump from ${{ github.repository }}@${{ github.sha }}"
           signoff: true
           delete-branch: true
