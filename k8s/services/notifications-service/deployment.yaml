@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: notifications-service
-          image: 768881856011.dkr.ecr.eu-west-2.amazonaws.com/microtodo/notifications-service:latest
+          image: 768881856011.dkr.ecr.eu-west-2.amazonaws.com/microtodo/notifications-service:f15592848277495529b9d04871b03422ff0d5ef9
           ports:
             - containerPort: 3000
           env:
