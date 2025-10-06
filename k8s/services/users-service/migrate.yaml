@@ -16,49 +16,48 @@ spec:
     spec:
       restartPolicy: OnFailure
       initContainers:
-      - name: wait-for-db
-        image: postgres:15
-        command: ["sh","-lc"]
-        args:
-          - |
-            until pg_isready -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$DATABASE_USERNAME"; do echo waiting for db; sleep 3; done
-        env:
-        - name: DATABASE_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: users-service-config
-              key: DATABASE_HOST
-        - name: DATABASE_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: users-service-config
-              key: DATABASE_PORT
-        - name: DATABASE_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: microtodo-secrets
-              key: postgres-username
+        - name: wait-for-db
+          image: postgres:15
+          command: ["sh", "-lc"]
+          args:
+            - |
+              until pg_isready -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$DATABASE_USERNAME"; do echo waiting for db; sleep 3; done
+          env:
+            - name: DATABASE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: users-service-config
+                  key: DATABASE_HOST
+            - name: DATABASE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: users-service-config
+                  key: DATABASE_PORT
+            - name: DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: microtodo-secrets
+                  key: postgres-username
       containers:
-      - name: migrate
-        image: 768881856011.dkr.ecr.eu-west-2.amazonaws.com/microtodo/users-service:latest
-        command: ["sh","-lc"]
-        args:
-          - |
-            npx prisma migrate deploy
-        env:
-        - name: DATABASE_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: microtodo-secrets
-              key: postgres-username
-        - name: DATABASE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: microtodo-secrets
-              key: postgres-password
-        - name: DATABASE_URL
-          value: "postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@$(DATABASE_HOST):$(DATABASE_PORT)/$(DATABASE_NAME)"
-        envFrom:
-        - configMapRef:
-            name: users-service-config
-
+        - name: migrate
+          image: 768881856011.dkr.ecr.eu-west-2.amazonaws.com/microtodo/users-service:fb5c9f8634b96e4b14e367d39f65ad3533bef30c
+          command: ["sh", "-lc"]
+          args:
+            - |
+              npx prisma migrate deploy
+          env:
+            - name: DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: microtodo-secrets
+                  key: postgres-username
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: microtodo-secrets
+                  key: postgres-password
+            - name: DATABASE_URL
+              value: "postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@$(DATABASE_HOST):$(DATABASE_PORT)/$(DATABASE_NAME)"
+          envFrom:
+            - configMapRef:
+                name: users-service-config
