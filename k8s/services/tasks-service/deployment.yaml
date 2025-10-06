@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: tasks-service
-          image: 768881856011.dkr.ecr.eu-west-2.amazonaws.com/microtodo/tasks-service:44d2bff66e159bc461bb804e816057d26511b400
+          image: 768881856011.dkr.ecr.eu-west-2.amazonaws.com/microtodo/tasks-service:latest
           ports:
             - containerPort: 3000
           env:

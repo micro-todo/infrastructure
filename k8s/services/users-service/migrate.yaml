@@ -40,7 +40,7 @@ spec:
                   key: postgres-username
       containers:
         - name: migrate
-          image: 768881856011.dkr.ecr.eu-west-2.amazonaws.com/microtodo/users-service:fb5c9f8634b96e4b14e367d39f65ad3533bef30c
+          image: 768881856011.dkr.ecr.eu-west-2.amazonaws.com/microtodo/users-service:latest
           command: ["sh", "-lc"]
           args:
             - |

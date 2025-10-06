@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: 768881856011.dkr.ecr.eu-west-2.amazonaws.com/microtodo/api-gateway:4cca2bfab5015952be5f808e8a5bb2461803f655
+          image: 768881856011.dkr.ecr.eu-west-2.amazonaws.com/microtodo/api-gateway:latest
           ports:
             - containerPort: 3000
           env:
