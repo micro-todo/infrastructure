@@ -14,99 +14,72 @@ spec:
         app: tasks-service
     spec:
       containers:
-      - name: tasks-service
-        image: 768881856011.dkr.ecr.eu-west-2.amazonaws.com/microtodo/tasks-service:latest
-        ports:
-        - containerPort: 3000
-        env:
-        - name: DATABASE_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: microtodo-secrets
-              key: postgres-username
-        - name: DATABASE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: microtodo-secrets
-              key: postgres-password
-        - name: RABBITMQ_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: microtodo-secrets
-              key: rabbitmq-username
-        - name: RABBITMQ_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: microtodo-secrets
-              key: rabbitmq-password
-        - name: DATABASE_URL
-          value: "postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@$(DATABASE_HOST):$(DATABASE_PORT)/$(DATABASE_NAME)"
-        - name: RMQ_URL
-          value: "amqp://$(RABBITMQ_USERNAME):$(RABBITMQ_PASSWORD)@$(RABBITMQ_HOST):$(RABBITMQ_PORT)"
-        envFrom:
-        - configMapRef:
-            name: tasks-service-config
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
-        startupProbe:
-          exec:
-            command:
-              - node
-              - -e
-              - >
-                const net=require('net');
-                const host=process.env.TCP_HOST;
-                const port=Number(process.env.TCP_PORT);
-                const payload=process.env.HEALTH_PAYLOAD;
-                const s=net.createConnection({host,port});
-                const t=setTimeout(()=>{s.destroy();process.exit(1)},5000);
-                let ok=false;
-                s.on('connect',()=>s.write(payload));
-                s.on('data',()=>{ok=true;clearTimeout(t);s.end();process.exit(0)});
-                s.on('error',()=>{clearTimeout(t);process.exit(1)});
-                s.on('end',()=>{if(!ok)process.exit(1)});
-          periodSeconds: 5
-          failureThreshold: 30
-        livenessProbe:
-          exec:
-            command:
-              - node
-              - -e
-              - >
-                const net=require('net');
-                const host=process.env.TCP_HOST;
-                const port=Number(process.env.TCP_PORT);
-                const payload=process.env.HEALTH_PAYLOAD;
-                const s=net.createConnection({host,port});
-                const t=setTimeout(()=>{s.destroy();process.exit(1)},5000);
-                let ok=false;
-                s.on('connect',()=>s.write(payload));
-                s.on('data',()=>{ok=true;clearTimeout(t);s.end();process.exit(0)});
-                s.on('error',()=>{clearTimeout(t);process.exit(1)});
-                s.on('end',()=>{if(!ok)process.exit(1)});
-          periodSeconds: 10
-          failureThreshold: 3
-        readinessProbe:
-          exec:
-            command:
-              - node
-              - -e
-              - >
-                const net=require('net');
-                const host=process.env.TCP_HOST;
-                const port=Number(process.env.TCP_PORT);
-                const payload=process.env.HEALTH_PAYLOAD;
-                const s=net.createConnection({host,port});
-                const t=setTimeout(()=>{s.destroy();process.exit(1)},5000);
-                let ok=false;
-                s.on('connect',()=>s.write(payload));
-                s.on('data',()=>{ok=true;clearTimeout(t);s.end();process.exit(0)});
-                s.on('error',()=>{clearTimeout(t);process.exit(1)});
-                s.on('end',()=>{if(!ok)process.exit(1)});
-          periodSeconds: 5
-          failureThreshold: 3
+        - name: tasks-service
+          image: 768881856011.dkr.ecr.eu-west-2.amazonaws.com/microtodo/tasks-service:44d2bff66e159bc461bb804e816057d26511b400
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: microtodo-secrets
+                  key: postgres-username
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: microtodo-secrets
+                  key: postgres-password
+            - name: RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: microtodo-secrets
+                  key: rabbitmq-username
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: microtodo-secrets
+                  key: rabbitmq-password
+            - name: DATABASE_URL
+              value: "postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@$(DATABASE_HOST):$(DATABASE_PORT)/$(DATABASE_NAME)"
+            - name: RMQ_URL
+              value: "amqp://$(RABBITMQ_USERNAME):$(RABBITMQ_PASSWORD)@$(RABBITMQ_HOST):$(RABBITMQ_PORT)"
+          envFrom:
+            - configMapRef:
+                name: tasks-service-config
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          startupProbe:
+            exec:
+              command:
+                - node
+                - -e
+                - >
+                  const net=require('net'); const host=process.env.TCP_HOST; const port=Number(process.env.TCP_PORT); const payload=process.env.HEALTH_PAYLOAD; const s=net.createConnection({host,port}); const t=setTimeout(()=>{s.destroy();process.exit(1)},5000); let ok=false; s.on('connect',()=>s.write(payload)); s.on('data',()=>{ok=true;clearTimeout(t);s.end();process.exit(0)}); s.on('error',()=>{clearTimeout(t);process.exit(1)}); s.on('end',()=>{if(!ok)process.exit(1)});
+
+            periodSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            exec:
+              command:
+                - node
+                - -e
+                - >
+                  const net=require('net'); const host=process.env.TCP_HOST; const port=Number(process.env.TCP_PORT); const payload=process.env.HEALTH_PAYLOAD; const s=net.createConnection({host,port}); const t=setTimeout(()=>{s.destroy();process.exit(1)},5000); let ok=false; s.on('connect',()=>s.write(payload)); s.on('data',()=>{ok=true;clearTimeout(t);s.end();process.exit(0)}); s.on('error',()=>{clearTimeout(t);process.exit(1)}); s.on('end',()=>{if(!ok)process.exit(1)});
+
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - node
+                - -e
+                - >
+                  const net=require('net'); const host=process.env.TCP_HOST; const port=Number(process.env.TCP_PORT); const payload=process.env.HEALTH_PAYLOAD; const s=net.createConnection({host,port}); const t=setTimeout(()=>{s.destroy();process.exit(1)},5000); let ok=false; s.on('connect',()=>s.write(payload)); s.on('data',()=>{ok=true;clearTimeout(t);s.end();process.exit(0)}); s.on('error',()=>{clearTimeout(t);process.exit(1)}); s.on('end',()=>{if(!ok)process.exit(1)});
+
+            periodSeconds: 5
+            failureThreshold: 3
